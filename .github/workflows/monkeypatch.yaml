@@ -40,7 +40,10 @@ jobs:
           excluded_tags="v1.0 v1.0.0 v1.0.1 v1.0.2 v1.0.3 v1.0.4 v1.1 v1.1.0"
           upstream_tags=$(cat upstream_tags.json | jq -r '.[]')
           origin_tags=$(cat origin_tags.json | jq -r '.[]')
-          out_of_sync_tags=$(comm -3 <(echo "$upstream_tags" | tr ' ' '\n' | sort) <(echo "$origin_tags" | tr ' ' '\n' | sort | grep -v '^$') | grep -v -E "$(echo $excluded_tags | sed 's/ /|/g')")
+          echo "Upstream tags: $upstream_tags"
+          echo "Origin tags: $origin_tags"
+          out_of_sync_tags=$(comm -3 <(echo "$upstream_tags" | tr ' ' '\n' | sort) <(echo "$origin_tags" | tr ' ' '\n' | sort | grep -v '^$') | grep -v -E "$(echo $excluded_tags | sed 's/ /|/g')" || true)
+          echo "Out of sync tags: $out_of_sync_tags"
           if [ -z "$out_of_sync_tags" ]; then
             echo "No tags to update"
             echo "tags=[]" >> $GITHUB_OUTPUT
