@@ -37,9 +37,10 @@ jobs:
       - name: Filter out-of-sync tags
         id: filter-tags
         run: |
+          excluded_tags="v1.0 v1.0.0 v1.0.1 v1.0.2 v1.0.3 v1.0.4 v1.1 v1.1.0"
           upstream_tags=$(cat upstream_tags.json | jq -r '.[]')
           origin_tags=$(cat origin_tags.json | jq -r '.[]')
-          out_of_sync_tags=$(comm -3 <(echo "$upstream_tags" | tr ' ' '\n' | sort) <(echo "$origin_tags" | tr ' ' '\n' | sort | grep -v '^$'))
+          out_of_sync_tags=$(comm -3 <(echo "$upstream_tags" | tr ' ' '\n' | sort) <(echo "$origin_tags" | tr ' ' '\n' | sort | grep -v '^$') | grep -v -E "$(echo $excluded_tags | sed 's/ /|/g')")
           echo "Tags to update: $out_of_sync_tags"
           echo "tags=$(echo "$out_of_sync_tags" | jq -R -s -c 'split("\n") | map(select(length > 0))')" >> $GITHUB_OUTPUT
 
