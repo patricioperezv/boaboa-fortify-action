@@ -1,0 +1,39 @@
+name: Modify and Upload Tool Definitions
+
+on:
+  workflow_dispatch:
+
+jobs:
+  modify-and-upload:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Download tool-definitions.zip
+      run: |
+        wget https://github.com/fortify/tool-definitions/releases/download/v1/tool-definitions.yaml.zip -O tool-definitions.zip
+
+    - name: Unzip tool-definitions.zip
+      run: |
+        unzip tool-definitions.zip -d tool-definitions
+
+    - name: Modify YAML files
+      run: |
+        find tool-definitions -type f -name '*.yaml' -print0 | xargs -0 sed -i \
+          -e 's|https://tools.fortify.com/scancentral|https://nexus.boaboa.org/repository/fortify-tools-proxy-raw|g' \
+          -e 's|https://github.com/debricked|https://nexus.boaboa.org/repository/debricked-github-proxy-raw|g' \
+          -e 's|https://github.com/fod-dev|https://nexus.boaboa.org/repository/fod-dev-github-proxy-raw|g' \
+          -e 's|https://github.com/fortify-ps|https://nexus.boaboa.org/repository/fortify-ps-github-proxy-raw|g' \
+          -e 's|https://github.com/fortify|https://nexus.boaboa.org/repository/fortify-github-proxy-raw|g'
+
+    - name: Recreate ZIP file
+      run: |
+        cd tool-definitions
+        zip -r ../tool-definitions-modified.zip .
+
+    - name: Upload modified ZIP to Nexus
+      run: |
+        curl -u "${{ secrets.CICD_NRM_USERNAME }}:${{ secrets.CICD_NRM_PASSWORD }}" --upload-file tool-definitions-modified.zip \
+          https://nexus.boaboa.org/repository/boaboa-installers/fortify/tool-definitions/releases/download/v1/tools-definitions.yaml.zip

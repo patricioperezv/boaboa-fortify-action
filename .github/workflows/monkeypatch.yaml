@@ -1,0 +1,83 @@
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  compare-tags:
+    runs-on: ubuntu-latest
+    outputs:
+      tags-to-update: ${{ steps.filter-tags.outputs.tags }}
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up git to compare tags
+        run: |
+          git remote add upstream https://github.com/fortify/github-action.git
+          git fetch upstream --tags --force
+
+      - name: Get tags from upstream
+        id: get-upstream-tags
+        run: |
+          git tag --sort=-v:refname | jq -R -s -c 'split("\n") | map(select(length > 0))' > upstream_tags.json
+
+      - name: Get tags from origin
+        id: get-origin-tags
+        run: |
+          git fetch origin --tags
+          git tag --sort=-v:refname | jq -R -s -c 'split("\n") | map(select(length > 0))' > origin_tags.json
+
+      - name: Filter out-of-sync tags
+        id: filter-tags
+        run: |
+          upstream_tags=$(cat upstream_tags.json | jq -r '.[]')
+          origin_tags=$(cat origin_tags.json | jq -r '.[]')
+          out_of_sync_tags=$(comm -23 <(echo "$upstream_tags" | tr ' ' '\n' | sort) <(echo "$origin_tags" | tr ' ' '\n' | sort))
+          echo "Tags to update: $out_of_sync_tags"
+          echo "::set-output name=tags::$(echo "$out_of_sync_tags" | jq -R -s -c 'split("\n") | map(select(length > 0))')"
+
+  monkeypatch:
+    needs: compare-tags
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tag: ${{ fromJson(needs.compare-tags.outputs.tags-to-update) }}
+    if: ${{ needs.compare-tags.outputs.tags-to-update != '[]' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Establish the committer identity
+        run: |
+          git config --global user.name "Patricio Perez"
+          git config --global user.email "73832292+patricioperezv@users.noreply.github.com"
+
+      - name: Add "fortify/github-action" as a Git remote and fetch it
+        run: |
+          git remote add upstream https://github.com/fortify/github-action.git
+          git fetch upstream --tags --force
+      
+      - name: Checkout to a new branch pointing to the tag ${{ matrix.tag }}
+        run: |
+          git checkout -B ${{ matrix.tag }} ${{ matrix.tag }}
+
+      - name: Remove the workflow directory
+        continue-on-error: false
+        run: |
+          rm -rf .github/workflows
+
+      - name: Vandal the fod setup action to hardcode the TOOL_DEFINITIONS export
+        run: |
+          sed -i "s|exports.TOOL_DEFINITIONS.*|exports.TOOL_DEFINITIONS = 'https://nexus.boaboa.org/repository/boaboa-installers/fortify/tool-definitions/releases/download/v1/tools-definitions.yaml.zip';|" setup/dist/index.js
+
+      - name: Prepend the README-prepend.md to the README.md
+        run: |
+          cat README-prepend.md README.md > README.md.tmp
+          mv README.md.tmp README.md
+
+      - name: Commit and push the changes
+        run: |
+          git add . && git commit -m "Cirrus Labs modifications"
+
+      - name: Force-push to the "${{ matrix.tag }}" branch
+        run: git push -f origin refs/heads/${{ matrix.tag }}
