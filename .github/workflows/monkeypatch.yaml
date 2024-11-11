@@ -83,6 +83,10 @@ jobs:
           mv README.md.tmp README.md
           rm README-prepend.md
 
+      - name: Update action.yaml and action.yml files
+        run: |
+          find . -type f \( -name 'action.yaml' -o -name 'action.yml' \) -exec sed -i "s|fortify/github-action|${{ github.repository }}|g" {} +
+
       - name: Commit the changes
         run: |
           git add . && git commit -m "Boaboa monkeypatching the fortify github actions"
@@ -93,4 +97,4 @@ jobs:
 
       - name: Push the tag
         run: |
-          git push origin ${{ matrix.tag }} --force
+          git push origin refs/tags/${{ matrix.tag }} --force
