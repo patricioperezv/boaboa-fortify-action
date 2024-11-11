@@ -23,6 +23,10 @@ jobs:
         id: get-upstream-tags
         run: |
           git tag --sort=-v:refname | jq -R -s -c 'split("\n") | map(select(length > 0))' > upstream_tags.json
+      
+      - name: Clean up local tags before fetching the ones from origin
+        run: |
+          git tag -d $(git tag -l)
 
       - name: Get tags from origin
         id: get-origin-tags
@@ -37,7 +41,7 @@ jobs:
           origin_tags=$(cat origin_tags.json | jq -r '.[]')
           out_of_sync_tags=$(comm -3 <(echo "$upstream_tags" | tr ' ' '\n' | sort) <(echo "$origin_tags" | tr ' ' '\n' | sort))
           echo "Tags to update: $out_of_sync_tags"
-          echo "::set-output name=tags::$(echo "$out_of_sync_tags" | jq -R -s -c 'split("\n") | map(select(length > 0))')"
+          echo "tags::$(echo "$out_of_sync_tags" | jq -R -s -c 'split("\n") | map(select(length > 0))')" >> $GITHUB_OUTPUT
 
   monkeypatch:
     needs: compare-tags
