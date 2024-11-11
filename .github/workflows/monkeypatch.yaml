@@ -35,7 +35,7 @@ jobs:
         run: |
           upstream_tags=$(cat upstream_tags.json | jq -r '.[]')
           origin_tags=$(cat origin_tags.json | jq -r '.[]')
-          out_of_sync_tags=$(comm -23 <(echo "$upstream_tags" | tr ' ' '\n' | sort) <(echo "$origin_tags" | tr ' ' '\n' | sort))
+          out_of_sync_tags=$(comm -3 <(echo "$upstream_tags" | tr ' ' '\n' | sort) <(echo "$origin_tags" | tr ' ' '\n' | sort))
           echo "Tags to update: $out_of_sync_tags"
           echo "::set-output name=tags::$(echo "$out_of_sync_tags" | jq -R -s -c 'split("\n") | map(select(length > 0))')"
 
@@ -79,7 +79,7 @@ jobs:
 
       - name: Commit and push the changes
         run: |
-          git add . && git commit -m "Cirrus Labs modifications"
+          git add . && git commit -m "Boaboa monkeypatching the fortify github actions"
 
       - name: Force-push to the "${{ matrix.tag }}" branch
         run: git push -f origin refs/heads/${{ matrix.tag }}
