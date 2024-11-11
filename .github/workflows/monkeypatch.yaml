@@ -83,9 +83,14 @@ jobs:
           mv README.md.tmp README.md
           rm README-prepend.md
 
-      - name: Commit and push the changes
+      - name: Commit the changes
         run: |
           git add . && git commit -m "Boaboa monkeypatching the fortify github actions"
 
+      - name: Recreate the tag
+        run: |
+          git tag -f ${{ matrix.tag }}
+
       - name: Push the tag
-        run: git push origin ${{ matrix.tag }}
+        run: |
+          git push origin ${{ matrix.tag }} --force
