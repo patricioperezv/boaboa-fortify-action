@@ -78,8 +78,10 @@ jobs:
 
       - name: Prepend the README-prepend.md to the README.md
         run: |
+          git show main:README-prepend.md > README-prepend.md
           cat README-prepend.md README.md > README.md.tmp
           mv README.md.tmp README.md
+          rm README-prepend.md
 
       - name: Commit and push the changes
         run: |
