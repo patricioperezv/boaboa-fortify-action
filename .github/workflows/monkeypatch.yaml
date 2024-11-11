@@ -65,7 +65,7 @@ jobs:
       
       - name: Checkout to a new branch pointing to the tag ${{ matrix.tag }}
         run: |
-          git checkout -B ${{ matrix.tag }} ${{ matrix.tag }}-monkeypatch
+          git checkout -B ${{ matrix.tag }}-monkeypatch ${{ matrix.tag }}
 
       - name: Remove the workflow directory
         continue-on-error: false
