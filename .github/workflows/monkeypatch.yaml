@@ -1,3 +1,5 @@
+name: Monkeypatch fortify github actions
+
 on:
   workflow_dispatch:
 
