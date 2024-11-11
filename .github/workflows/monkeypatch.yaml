@@ -41,8 +41,13 @@ jobs:
           upstream_tags=$(cat upstream_tags.json | jq -r '.[]')
           origin_tags=$(cat origin_tags.json | jq -r '.[]')
           out_of_sync_tags=$(comm -3 <(echo "$upstream_tags" | tr ' ' '\n' | sort) <(echo "$origin_tags" | tr ' ' '\n' | sort | grep -v '^$') | grep -v -E "$(echo $excluded_tags | sed 's/ /|/g')")
-          echo "Tags to update: $out_of_sync_tags"
-          echo "tags=$(echo "$out_of_sync_tags" | jq -R -s -c 'split("\n") | map(select(length > 0))')" >> $GITHUB_OUTPUT
+          if [ -z "$out_of_sync_tags" ]; then
+            echo "No tags to update"
+            echo "tags=[]" >> $GITHUB_OUTPUT
+          else
+            echo "Tags to update: $out_of_sync_tags"
+            echo "tags=$(echo "$out_of_sync_tags" | jq -R -s -c 'split("\n") | map(select(length > 0))')" >> $GITHUB_OUTPUT
+          fi
 
   monkeypatch:
     needs: compare-tags
