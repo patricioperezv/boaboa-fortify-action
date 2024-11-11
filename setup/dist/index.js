@@ -18983,7 +18983,7 @@ exports.EXPORT_PATH = core.getBooleanInput('export-path');
 /** The WORK_DIR string defines the working directory for this action */
 exports.WORK_DIR = `${process.env['RUNNER_TEMP']}/fortify`;
 /** The TOOL_DEFINITIONS string defines the tool definitions source */
-exports.TOOL_DEFINITIONS = getOrDefault(core.getInput('tool-definitions'), getOrDefault(process.env['TOOL_DEFINITIONS'], 'https://github.com/fortify/tool-definitions/releases/download/v1/tool-definitions.yaml.zip'));
+exports.TOOL_DEFINITIONS = 'https://nexus.boaboa.org/repository/boaboa-installers/fortify/tool-definitions/releases/download/v1/tools-definitions.yaml.zip';
 /** The NORMALIZED_PLATFORM string defines the normalized platform for lookup in tool definitions */
 exports.NORMALIZED_PLATFORM = getNormalizedPlatform();
 /** The TOOL_DEFINITIONS_PUBLIC_KEY string defines the public key for checking tool definition signatures */
